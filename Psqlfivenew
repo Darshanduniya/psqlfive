@@ -1,0 +1,74 @@
+from airflow import DAG
+
+from airflow.operators.python_operator import PythonOperator
+
+from airflow.hooks.postgres_hook import PostgresHook
+
+from datetime import datetime, timedelta
+
+# Define default_args for the DAG
+
+default_args = {
+
+    'owner': 'your_name',
+
+    'start_date': datetime(2023, 1, 1),
+
+    'depends_on_past': False,
+
+    'retries': 1,
+
+    'retry_delay': timedelta(minutes=5),
+
+}
+
+# Instantiate a DAG object
+
+dag = DAG(
+
+    dag_id='fetch_logs_data_dag',  # Replace with your desired DAG name
+
+    default_args=default_args,
+
+    schedule_interval='0 0 * * *'  # Replace with your desired schedule interval
+
+)
+
+# Define a PythonOperator to fetch logs data using PostgresHook
+
+def fetch_logs_data():
+
+    # Create a PostgresHook instance
+
+    postgres_hook = PostgresHook(postgres_conn_id='your_postgres_conn_id')  # replace with your own connection ID
+
+    # Define the SQL query to fetch the logs data from the table
+
+    sql_query = """
+
+        SELECT * FROM your_logs_table_name;  -- replace with your own logs table name
+
+    """
+
+    # Fetch the logs data from the PostgreSQL table
+
+    logs_data = postgres_hook.get_records(sql_query)
+
+    # Print the logs data
+
+    print(logs_data)
+
+fetch_logs_data_task = PythonOperator(
+
+    task_id='fetch_logs_data_task',  # Replace with your desired task name
+
+    python_callable=fetch_logs_data,
+
+    dag=dag
+
+)
+
+# Set task dependencies
+
+fetch_logs_data_task
+
